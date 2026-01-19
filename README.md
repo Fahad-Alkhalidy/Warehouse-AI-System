@@ -1,33 +1,57 @@
-# Robot Orchestration System
+# Warehouse AI Robot Orchestration System
 
-A Next.js application that provides a centralized system for orchestrating tasks across four specialized robots using LLM-powered task generation.
+A Next.js application that provides an intelligent system for orchestrating tasks across four unified robots using LLM-powered task generation and LangGraph-based cyclic workflows.
 
 ## Overview
 
-This system consists of:
+This system implements a **LangGraph-based agentic loop** for warehouse robot control with:
 - **Centralized Orchestration API**: Takes user prompts, environment JSON, and LLM model selection to generate specific tasks for each robot
-- **Four Specialized Robots**:
-  1. **Navigation Robot** - Handles movement, pathfinding, and spatial positioning
-  2. **Manipulation Robot** - Manages object grasping, movement, and physical interactions
-  3. **Sensing Robot** - Collects environmental data, detects objects, and monitors conditions
-  4. **Communication Robot** - Coordinates between robots and manages status reporting
+- **Four Unified Robots (R1, R2, R3, R4)**: All robots have identical capabilities including navigation, manipulation, sensing, and communication
+- **18x16 Warehouse Grid Visualization**: Interactive grid showing robot positions, paths, and environment
+- **Test Scenario System**: Pre-built and custom test scenarios with automated evaluation
+- **Path Planning with Obstacle Avoidance**: Automatic path generation that avoids shelves and obstacles
 
 ## Features
 
-- 🤖 Multi-robot task orchestration
-- 🧠 Support for multiple LLM providers (Anthropic Claude, OpenAI GPT)
-- 📋 JSON-based environment configuration
-- 🎯 Intelligent task distribution based on robot capabilities
-- 🖥️ Modern, responsive UI built with Next.js and Tailwind CSS
+### Core Features
+- 🤖 **Multi-robot task orchestration** - Intelligently divides tasks among 4 robots
+- 🧠 **Multiple LLM providers** - Support for Anthropic Claude, OpenAI GPT, Google Gemini (FREE), and xAI Grok
+- 📋 **JSON-based environment configuration** - Flexible warehouse layout definition
+- 🎯 **Intelligent task distribution** - Proximity-based and workload-balanced task allocation
+- 🖥️ **Modern, responsive UI** - Built with Next.js, TypeScript, and Tailwind CSS
+- 📊 **Test scenario runner** - Automated testing with evaluation metrics
+- 📄 **PDF report generation** - Detailed test reports with scores and analysis
+
+### Visualization Features
+- 🗺️ **Interactive warehouse grid** - 18x16 grid visualization with real-time updates
+- 🎨 **Color-coded robot paths** - Distinct colors for each robot's path (R1=Blue, R2=Green, R3=Purple, R4=Orange)
+- 🚧 **Obstacle avoidance visualization** - Paths automatically route around shelves
+- 📍 **Path start/end markers** - Clear indication of path origins and destinations
+- 🔄 **Continuous path rendering** - Smooth interpolation between waypoints
+
+### Customization Features
+- ✏️ **Custom scenario builder** - Create your own test scenarios with visual grid editor
+- 💾 **LocalStorage persistence** - Custom scenarios saved in browser
+- 🎛️ **Tabbed scenario editor** - Organized interface for Basic Info, Robots, Tasks, and Grid
+- 🗑️ **Edit/Delete scenarios** - Manage your custom scenarios easily
+
+### Technical Features
+- 🔄 **Automatic retry logic** - Exponential backoff for transient API errors (503, 429, etc.)
+- 🛡️ **Robust JSON parsing** - Handles malformed LLM responses with repair logic
+- ⚡ **Path extraction** - Advanced regex and bracket counting for reliable path parsing
+- 🚫 **Obstacle filtering** - Automatic removal of paths through shelves
+- 📈 **Performance metrics** - Response time, JSON validity, safety compliance tracking
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js 18+ and npm/yarn/pnpm
-- API keys for at least one LLM provider:
+- API keys for at least one LLM provider (Gemini is FREE):
+  - **Google Gemini API key** (FREE) - Recommended for testing
   - Anthropic API key (for Claude models)
   - OpenAI API key (for GPT models)
+  - xAI API key (for Grok models)
 
 ### Installation
 
@@ -50,10 +74,15 @@ pnpm install
 cp .env.example .env
 ```
 
-4. Edit `.env` and add your API keys:
+4. Edit `.env` and add your API keys (at least one):
 ```env
+# FREE option - Recommended for testing
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Paid options
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
 OPENAI_API_KEY=your_openai_api_key_here
+GROK_API_KEY=your_grok_api_key_here
 ```
 
 5. Run the development server:
@@ -69,50 +98,60 @@ pnpm dev
 
 ## Usage
 
+### Test Scenario Runner (Main Interface)
+
+1. **Select LLM Model**: Choose from available models (Gemini 1.5 Flash is FREE and recommended)
+2. **Select Test Scenarios**: Check one or more pre-built scenarios, or create custom ones
+3. **Run Tests**: Click "Run Test Scenarios" to execute
+4. **View Results**: See evaluation scores, robot tasks, paths, and grid visualization
+5. **Download PDF**: Export detailed test reports as PDF
+
+### Creating Custom Scenarios
+
+1. Click the **"Custom"** button next to "Test Scenarios"
+2. Fill in the scenario details:
+   - **Basic Info**: Scenario ID and description
+   - **Robots**: Set starting positions for R1, R2, R3, R4
+   - **Tasks**: Add tasks to the task pool
+   - **Warehouse Grid**: Click cells to toggle between Path, Shelf, Charging, Loading, Unloading
+3. Click **"Save Scenario"** to add it to your list
+4. Custom scenarios are saved in browser localStorage
+
+### Robot Orchestration (Alternative Interface)
+
 1. **Enter a Task Prompt**: Describe the overall task you want the robots to accomplish
-2. **Upload Environment JSON**: Provide a JSON file representing the robot environment (e.g., warehouse layout, object locations, etc.)
-3. **Select LLM Model**: Choose from available models (Claude or GPT models)
+2. **Upload Environment JSON**: Provide a JSON file representing the robot environment
+3. **Select LLM Model**: Choose from available models
 4. **Generate Tasks**: Click "Generate Robot Tasks" to let the system create specific tasks for each robot
-5. **View Results**: See the generated tasks displayed for each robot
+5. **View Results**: See the generated tasks displayed for each robot with paths
 
-### Example Environment JSON
+## Robot System
 
-```json
-{
-  "warehouse": {
-    "dimensions": {"width": 100, "height": 50, "depth": 30},
-    "shelves": [
-      {"id": "A1", "position": {"x": 10, "y": 5}, "items": ["box1", "box2"]},
-      {"id": "A2", "position": {"x": 20, "y": 5}, "items": ["box3"]}
-    ],
-    "obstacles": [{"x": 15, "y": 10, "type": "pallet"}],
-    "target_location": {"x": 90, "y": 45}
-  },
-  "robots": {
-    "navigation": {"position": {"x": 0, "y": 0}, "battery": 85},
-    "manipulation": {"position": {"x": 5, "y": 0}, "battery": 90},
-    "sensing": {"position": {"x": 2, "y": 0}, "battery": 95},
-    "communication": {"position": {"x": 1, "y": 0}, "battery": 88}
-  }
-}
-```
+### Unified Robot Capabilities
 
-## Architecture
+All four robots (R1, R2, R3, R4) have **identical capabilities**:
+- Path planning and route optimization
+- Obstacle avoidance and navigation
+- Object grasping and manipulation
+- Environmental sensing and data collection
+- Inter-robot coordination and communication
+- Battery management and charging
+- Task execution and status reporting
 
-### API Endpoint
+### Task Distribution
 
-`POST /api/orchestrate`
-- Accepts: `{ prompt: string, environment: object, model: string }`
-- Returns: `{ success: boolean, tasks: RobotTasks, robotTasks: RobotTask[], timestamp: string }`
-
-### Core Components
-
-- **`lib/llm-providers.ts`**: LLM provider implementations (Anthropic, OpenAI)
-- **`lib/robots.ts`**: Robot service classes and orchestrator
-- **`components/RobotOrchestrationSystem.tsx`**: Main UI component
-- **`app/api/orchestrate/route.ts`**: Centralized orchestration API endpoint
+The system intelligently divides tasks based on:
+- **Proximity**: Assigns tasks to robots closest to the target location
+- **Battery levels**: Prioritizes robots with sufficient battery
+- **Workload balance**: Distributes tasks evenly across all robots
+- **Supporting roles**: Assigns coordination/monitoring tasks when needed
 
 ## Supported Models
+
+### Google Gemini (FREE) ⭐ Recommended
+- `gemini-1.5-flash` - Fast and free, perfect for testing
+- `gemini-1.5-pro` - More capable free option
+- `gemini-pro` - Original Gemini model
 
 ### Anthropic Claude
 - `claude-sonnet-4-20250514`
@@ -129,10 +168,66 @@ pnpm dev
 - `grok-2`
 - `grok-2-1212`
 
-### Google Gemini (FREE)
-- `gemini-1.5-flash` ⭐ Recommended free option
-- `gemini-1.5-pro`
-- `gemini-pro`
+## Architecture
+
+### LangGraph Workflow
+
+The system implements a 5-node cyclic workflow:
+
+1. **Process Natural Language Commands** - Receives user input
+2. **Query Robot Statuses** - Gathers current robot states
+3. **LLM Reasoning** - Generates task allocation using LLM
+4. **Execute Commands** - Prepares commands for robots
+5. **Broadcast Response** - Returns human-readable response
+
+### API Endpoints
+
+- `POST /api/orchestrate` - Main orchestration endpoint
+- `POST /api/test-scenarios` - Test scenario execution
+- `GET /api/health` - System health check
+
+### Core Components
+
+- **`lib/langgraph-workflow.ts`**: LangGraph workflow implementation
+- **`lib/llm-providers.ts`**: LLM provider implementations (Anthropic, OpenAI, Gemini, Grok)
+- **`lib/robots.ts`**: Robot classes and orchestrator
+- **`lib/test-scenarios.ts`**: Test scenario definitions
+- **`lib/evaluation.ts`**: Test evaluation metrics
+- **`lib/pdf-generator.ts`**: PDF report generation
+- **`components/TestScenarioRunner.tsx`**: Main test interface
+- **`components/WarehouseGridVisualization.tsx`**: Grid visualization component
+- **`components/RobotOrchestrationSystem.tsx`**: Alternative orchestration UI
+
+## Warehouse Grid
+
+The warehouse is represented as an **18x16 grid** where:
+- Each cell = 1x1 meter physical space
+- **Cell Types**:
+  - `.` = Path (traversable)
+  - `S` = Shelf (obstacle - robots cannot pass)
+  - `C` = Charging station
+  - `L` = Loading area
+  - `U` = Unloading area
+  - `R1`, `R2`, `R3`, `R4` = Robot positions
+
+## Path Planning
+
+- **Automatic path extraction** from LLM responses
+- **Obstacle avoidance** - Paths automatically route around shelves
+- **Continuous visualization** - Smooth paths between waypoints
+- **Color coding** - Each robot has a distinct path color
+- **Start/End markers** - Clear path visualization
+
+## Test Evaluation
+
+Tests are evaluated on:
+- **Response Time** (20 points) - How quickly the system responds
+- **JSON Validity** (15 points) - Correctness of JSON output
+- **Safety Compliance** (25 points) - Adherence to safety rules
+- **Task Allocation** (20 points) - Proper distribution of tasks
+- **Path Quality** (20 points) - Efficiency and correctness of paths
+
+**Total Score**: 100 points (70+ = Pass)
 
 ## Project Structure
 
@@ -140,15 +235,27 @@ pnpm dev
 warehouse-ai-system/
 ├── app/
 │   ├── api/
-│   │   └── orchestrate/
-│   │       └── route.ts          # Centralized API endpoint
+│   │   ├── orchestrate/
+│   │   │   └── route.ts          # Main orchestration API
+│   │   ├── test-scenarios/
+│   │   │   └── route.ts          # Test scenario execution
+│   │   └── health/
+│   │       └── route.ts          # Health check
 │   ├── page.tsx                  # Main page
 │   └── layout.tsx                # Root layout
 ├── components/
-│   └── RobotOrchestrationSystem.tsx  # Main UI component
+│   ├── TestScenarioRunner.tsx    # Main test interface
+│   ├── WarehouseGridVisualization.tsx  # Grid visualization
+│   ├── RobotOrchestrationSystem.tsx   # Alternative UI
+│   └── RobotStatusDashboard.tsx  # Robot status display
 ├── lib/
+│   ├── langgraph-workflow.ts     # LangGraph workflow
 │   ├── llm-providers.ts          # LLM provider implementations
-│   └── robots.ts                 # Robot classes and orchestrator
+│   ├── robots.ts                 # Robot classes
+│   ├── test-scenarios.ts         # Test scenarios
+│   ├── evaluation.ts             # Evaluation metrics
+│   ├── pdf-generator.ts          # PDF reports
+│   └── environment-matrix.ts    # Grid utilities
 └── .env.example                  # Environment variables template
 ```
 
@@ -159,7 +266,22 @@ The project uses:
 - **TypeScript** for type safety
 - **Tailwind CSS** for styling
 - **Lucide React** for icons
+- **LangGraph** concepts for workflow management
+
+## Error Handling
+
+- **Automatic retry** for transient API errors (503, 429, 500, 502, 504)
+- **Exponential backoff** (1s, 2s, 4s delays)
+- **JSON repair** for malformed LLM responses
+- **Graceful degradation** when API keys are missing
 
 ## License
 
 This project is open source and available for use.
+
+## Getting Help
+
+- Check `TROUBLESHOOTING.md` for common issues
+- Review `ARCHITECTURE.md` for system design details
+- See `TEST_CASE.md` for test scenario examples
+- Check `SETUP.md` for detailed setup instructions
